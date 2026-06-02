@@ -4,18 +4,12 @@ import SwipeFeed from '@/components/feed/SwipeFeed';
 
 export default function HomePage() {
   return (
-    <div className="relative h-screen bg-[#0a1628]">
-      {/* Stitch header */}
-      <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-5 pt-5">
-        <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-white">
-            <span style={{
-              background: 'linear-gradient(135deg, #4a90d9, #f472b6)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}>🐾 MusicFlow</span>
-          </h1>
-        </div>
+    <div className="relative h-screen bg-background">
+      {/* Header */}
+      <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 px-5 pt-5">
+        <h1 className="text-xl font-extrabold tracking-tight text-white">
+          🐾 <span>MusicFlow</span>
+        </h1>
       </div>
 
       {/* Ambient glow */}
