@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchSongs } from '@/lib/data/songs';
+import { searchITunes } from '@/lib/api/itunes';
 import { searchJamendo } from '@/lib/api/jamendo';
 
 export async function GET(request: NextRequest) {
@@ -11,8 +12,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ results: [], total: 0, page: 1 });
   }
 
-  // Try Jamendo first if API key is configured
-  let all = await searchJamendo(q, type);
+  // Try iTunes first (free, no auth)
+  let all = await searchITunes(q, type);
+
+  // Supplement with Jamendo if configured
+  if (process.env.JAMENDO_CLIENT_ID) {
+    const jamendoResults = await searchJamendo(q, type);
+    all = [...all, ...jamendoResults];
+  }
 
   // Fallback to seed data
   if (all.length === 0) {

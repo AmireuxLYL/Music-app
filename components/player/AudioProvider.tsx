@@ -53,7 +53,11 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const play = useCallback((song: Song, platform?: string) => {
-    const url = getStreamUrl(song.id, platform);
+    // Use direct URL from song sources if available (e.g. iTunes preview), otherwise proxy
+    const directUrl = song.sources?.[0]?.streamUrl;
+    const url = (directUrl && directUrl.startsWith('http'))
+      ? directUrl
+      : getStreamUrl(song.id, platform);
     audio.play({
       src: url,
       songId: song.id,
