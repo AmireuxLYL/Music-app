@@ -19,21 +19,32 @@ export default function DownloadButton({ song, className = '' }: DownloadButtonP
   }, [song.id]);
 
   if (downloaded) {
-    return <span className={`flex items-center gap-1 ${className}`} style={{ color: '#2ed573' }}>✅ 已下载</span>;
+    return (
+      <div className={`flex flex-col items-center gap-1 ${className}`} style={{ color: '#2ed573' }}>
+        <span className="text-lg">✅</span>
+        <span className="text-xs">已下载</span>
+      </div>
+    );
   }
 
   if (isDownloading(song.id)) {
     const pct = Math.round(getProgress(song.id));
-    return <span className={`flex items-center gap-1 ${className}`} style={{ color: '#aaa' }}>📥 {pct}%</span>;
+    return (
+      <div className={`flex flex-col items-center gap-1 ${className}`} style={{ color: '#ffa502' }}>
+        <span className="text-lg">📥</span>
+        <span className="text-xs">{pct}%</span>
+      </div>
+    );
   }
 
   return (
     <button
       onClick={(e) => { e.stopPropagation(); download(song); }}
-      className={`flex items-center gap-1 transition-colors hover:text-white ${className}`}
+      className={`flex flex-col items-center gap-1 transition-colors hover:text-white ${className}`}
       style={{ color: '#aaa' }}
     >
-      ⬇ 下载
+      <span className="text-lg">⬇️</span>
+      <span className="text-xs">下载</span>
     </button>
   );
 }

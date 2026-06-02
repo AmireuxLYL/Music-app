@@ -142,6 +142,51 @@ html, body {
   animation: shimmer 2s ease-in-out infinite;
 }
 
+/* Vinyl spinning animation - 汽水音乐 style */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.vinyl-spin {
+  animation: spin 12s linear infinite;
+}
+
+.vinyl-spin-slow {
+  animation: spin 20s linear infinite;
+}
+
+.vinyl-paused {
+  animation-play-state: paused;
+}
+
+/* Cover glow pulse */
+@keyframes coverGlow {
+  0%, 100% { filter: drop-shadow(0 0 30px rgba(255,107,107,0.3)); }
+  50% { filter: drop-shadow(0 0 60px rgba(255,107,107,0.5)); }
+}
+
+.cover-glow {
+  animation: coverGlow 3s ease-in-out infinite;
+}
+
+/* Record player ring */
+.vinyl-ring {
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #333, #1a1a1a, #333, #1a1a1a, #333, #1a1a1a, #333, #1a1a1a, #333);
+  box-shadow: 0 0 30px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.3);
+}
+
+/* Big blur background */
+.blur-bg {
+  position: absolute;
+  inset: 0;
+  filter: blur(80px);
+  opacity: 0.5;
+  transform: scale(1.5);
+  z-index: 0;
+}
+
 /* Hide scrollbar for horizontal scroll */
 .scrollbar-hide {
   -ms-overflow-style: none;
