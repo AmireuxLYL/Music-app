@@ -2,8 +2,18 @@ import type { Song, Source } from '@/lib/types';
 
 const JAMENDO_BASE = 'https://api.jamendo.com/v3.0';
 
-function getClientId(): string {
-  return process.env.JAMENDO_CLIENT_ID || '';
+import { cookies } from 'next/headers';
+
+async function getClientId(): Promise<string> {
+  // Check env var first
+  if (process.env.JAMENDO_CLIENT_ID) return process.env.JAMENDO_CLIENT_ID;
+  // Then check cookie (set by settings page)
+  try {
+    const cookieStore = await cookies();
+    return cookieStore.get('jamendo_client_id')?.value || '';
+  } catch {
+    return '';
+  }
 }
 
 function mapTrack(track: Record<string, unknown>): Song {
@@ -41,7 +51,7 @@ function mapTrack(track: Record<string, unknown>): Song {
 }
 
 export async function searchJamendo(query: string, type?: string, limit: number = 20): Promise<Song[]> {
-  const clientId = getClientId();
+  const clientId = await getClientId();
   if (!clientId) return [];
 
   const params = new URLSearchParams({
@@ -52,19 +62,21 @@ export async function searchJamendo(query: string, type?: string, limit: number 
     include: 'musicinfo',
   });
 
-  // Jamendo doesn't have a type filter, but we can search with type keywords
   if (type === 'instrumental') params.set('tags', 'instrumental');
   if (type === 'pure_music') params.set('tags', 'classical,ambient');
 
-  const res = await fetch(`${JAMENDO_BASE}/tracks/?${params}`);
-  const data = await res.json();
-
-  if (!data.results) return [];
-  return data.results.map(mapTrack);
+  try {
+    const res = await fetch(`${JAMENDO_BASE}/tracks/?${params}`);
+    const data = await res.json();
+    if (!data.results) return [];
+    return data.results.map(mapTrack);
+  } catch {
+    return [];
+  }
 }
 
 export async function getJamendoTrending(limit: number = 20): Promise<Song[]> {
-  const clientId = getClientId();
+  const clientId = await getClientId();
   if (!clientId) return [];
 
   const params = new URLSearchParams({
@@ -75,9 +87,12 @@ export async function getJamendoTrending(limit: number = 20): Promise<Song[]> {
     include: 'musicinfo',
   });
 
-  const res = await fetch(`${JAMENDO_BASE}/tracks/?${params}`);
-  const data = await res.json();
-
-  if (!data.results) return [];
-  return data.results.map(mapTrack);
+  try {
+    const res = await fetch(`${JAMENDO_BASE}/tracks/?${params}`);
+    const data = await res.json();
+    if (!data.results) return [];
+    return data.results.map(mapTrack);
+  } catch {
+    return [];
+  }
 }
