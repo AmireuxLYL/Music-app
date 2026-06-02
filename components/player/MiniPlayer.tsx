@@ -2,29 +2,51 @@
 
 import { useAudio } from '@/hooks/useAudio';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function MiniPlayer() {
-  const { currentSong, isPlaying, currentTime, duration, pause, resume } = useAudio();
+  const { currentSong, isPlaying, currentTime, duration, volume, setVolume, pause, resume } = useAudio();
   const router = useRouter();
+  const [showVolume, setShowVolume] = useState(false);
 
   if (!currentSong) return null;
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div
-      className="fixed bottom-[calc(3.5rem+4px)] left-0 right-0 z-50 mx-3 cursor-pointer slide-up-enter"
-      onClick={() => router.push(`/player/${currentSong.id}`)}
-    >
-      <div className="glass-strong flex items-center gap-3 rounded-2xl px-3 py-2">
-        {/* Mini vinyl cover */}
-        <div className={`h-11 w-11 shrink-0 rounded-full ${isPlaying ? 'vinyl-spin' : ''}`}
+    <div className="fixed bottom-[calc(3.5rem+4px)] left-0 right-0 z-50 mx-3">
+      {/* Volume slider popup */}
+      {showVolume && (
+        <div className="glass-strong mb-1 mx-2 rounded-xl px-4 py-2 flex items-center gap-2 slide-up-enter" onClick={(e) => e.stopPropagation()}>
+          <span className="text-xs text-text-muted">🔊</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={volume}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            className="flex-1 h-1 accent-[#4a90d9]"
+          />
+          <button onClick={() => setShowVolume(false)} className="text-xs text-text-muted">✕</button>
+        </div>
+      )}
+
+      <div
+        className="glass-strong cursor-pointer flex items-center gap-3 rounded-2xl px-3 py-2"
+        onClick={() => router.push(`/player/${currentSong.id}`)}
+      >
+        {/* Stitch-themed mini vinyl */}
+        <div
+          className={`h-11 w-11 shrink-0 rounded-full flex items-center justify-center text-lg ${
+            isPlaying ? 'vinyl-spin' : ''
+          }`}
           style={{
-            background: 'linear-gradient(135deg, #ff6b6b, #ff6348)',
-            boxShadow: '0 0 0 2px rgba(0,0,0,0.5), 0 0 0 3px rgba(255,255,255,0.08)',
+            background: 'linear-gradient(135deg, #4a90d9, #7ec8e3)',
+            boxShadow: '0 0 0 2px rgba(0,0,0,0.5), 0 0 0 3px rgba(244,114,182,0.4), 0 0 12px rgba(74,144,217,0.3)',
           }}
         >
-          <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#0f0f0f]" />
+          <span>🐾</span>
         </div>
 
         <div className="min-w-0 flex-1">
@@ -32,10 +54,21 @@ export default function MiniPlayer() {
           <p className="truncate text-xs text-text-secondary">{currentSong.artist}</p>
         </div>
 
+        {/* Volume button */}
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowVolume(!showVolume); }}
+          className="shrink-0 p-2 text-sm text-text-muted hover:text-white transition-colors"
+        >
+          {volume < 0.2 ? '🔈' : volume < 0.6 ? '🔉' : '🔊'}
+        </button>
+
         <button
           onClick={(e) => { e.stopPropagation(); isPlaying ? pause() : resume(); }}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition-transform active:scale-90"
-          style={{ background: 'linear-gradient(135deg, #ff6b6b, #ff6348)', boxShadow: isPlaying ? '0 0 16px rgba(255,107,107,0.5)' : 'none' }}
+          style={{
+            background: 'linear-gradient(135deg, #4a90d9, #2d6fb4)',
+            boxShadow: isPlaying ? '0 0 16px rgba(74,144,217,0.5)' : 'none',
+          }}
         >
           <span className="text-sm">{isPlaying ? '⏸' : '▶'}</span>
         </button>
@@ -44,7 +77,7 @@ export default function MiniPlayer() {
       <div className="mx-2 mt-0.5 h-1 rounded-full bg-white/10 overflow-hidden">
         <div className="h-full rounded-full transition-all duration-300" style={{
           width: `${progress}%`,
-          background: 'linear-gradient(90deg, #ff6b6b, #ffa502)',
+          background: 'linear-gradient(90deg, #4a90d9, #f472b6)',
         }} />
       </div>
     </div>

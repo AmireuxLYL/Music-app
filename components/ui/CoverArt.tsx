@@ -14,7 +14,7 @@ const sizes: Record<string, string> = {
 export default function CoverArt({
   src,
   size = 'md',
-  gradient = 'from-[#ff6b6b] to-[#ffa502]',
+  gradient = 'from-[#4a90d9] to-[#f472b6]',
   className = '',
 }: CoverArtProps) {
   const style: React.CSSProperties = {};
@@ -29,7 +29,7 @@ export default function CoverArt({
       className={`${sizes[size]} ${className} rounded-[16px] shrink-0 bg-linear-to-br ${gradient}`}
       style={{
         ...style,
-        boxShadow: '0 8px 40px rgba(255,107,107,0.5)',
+        boxShadow: '0 8px 40px rgba(74,144,217,0.4)',
       }}
     />
   );

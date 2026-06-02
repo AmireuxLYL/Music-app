@@ -57,12 +57,13 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
     audio.play({
       src: url,
       songId: song.id,
+      duration: song.duration,
       volume: state.volume,
       onLoad: () => {
         setState((prev) => ({
           ...prev,
           currentSong: song,
-          duration: audio.getDuration(),
+          duration: audio.getDuration() || song.duration,
           isPlaying: true,
         }));
         startProgress();

@@ -29,11 +29,11 @@ export default function ProgressBar({ current, total, onSeek, className = '' }: 
           className="h-full rounded-full transition-all"
           style={{
             width: `${progress}%`,
-            background: 'linear-gradient(90deg, #ff6b6b, #ffa502)',
+            background: 'linear-gradient(90deg, #4a90d9, #f472b6)',
           }}
         />
       </div>
-      <div className="mt-1 flex justify-between text-xs" style={{ color: '#666' }}>
+      <div className="mt-1 flex justify-between text-xs" style={{ color: '#5a7a9a' }}>
         <span>{formatTime(current)}</span>
         <span>{formatTime(total)}</span>
       </div>

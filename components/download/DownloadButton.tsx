@@ -20,7 +20,7 @@ export default function DownloadButton({ song, className = '' }: DownloadButtonP
 
   if (downloaded) {
     return (
-      <div className={`flex flex-col items-center gap-1 ${className}`} style={{ color: '#2ed573' }}>
+      <div className={`flex flex-col items-center gap-1 ${className}`} style={{ color: '#6bcb77' }}>
         <span className="text-lg">✅</span>
         <span className="text-xs">已下载</span>
       </div>
@@ -30,7 +30,7 @@ export default function DownloadButton({ song, className = '' }: DownloadButtonP
   if (isDownloading(song.id)) {
     const pct = Math.round(getProgress(song.id));
     return (
-      <div className={`flex flex-col items-center gap-1 ${className}`} style={{ color: '#ffa502' }}>
+      <div className={`flex flex-col items-center gap-1 ${className}`} style={{ color: '#f472b6' }}>
         <span className="text-lg">📥</span>
         <span className="text-xs">{pct}%</span>
       </div>
