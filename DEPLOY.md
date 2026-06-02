@@ -1,89 +1,66 @@
-# Music App — Setup & Deployment Guide
+# MusicFlow — 安装和使用指南
 
-## 快速启动
+## 🚀 本地运行
 
 ```bash
-cd music-app
-npm install
+cd C:\Users\Administrator\music-app
 npm run dev
 ```
 
-浏览器打开 http://localhost:3000
+浏览器打开 **http://localhost:3000**
 
 ---
 
-## 接入真实音乐 API
+## 📱 安装到手机/电脑（PWA）
 
-### Jamendo（免费，推荐首选）
+App 已支持 PWA，可以像原生 App 一样安装：
 
-1. 访问 https://developers.jamendo.com/v3.0
-2. 注册账号，创建应用
-3. 获取 Client ID
-4. 在 `.env.local` 中配置：
+### iPhone / iPad
+1. Safari 打开 `http://你的IP:3000`
+2. 点击底部 **分享按钮** (↑)
+3. 选择 **添加到主屏幕**
+4. 桌面出现 MusicFlow 图标，点击即可全屏使用
+
+### Android
+1. Chrome 打开 `http://你的IP:3000`
+2. 弹出 **添加到主屏幕** 横幅（或菜单→安装应用）
+3. 安装后像原生 App 一样使用
+
+### 电脑
+1. Chrome 打开 `http://localhost:3000`
+2. 地址栏右侧出现 **安装图标** (⊕)
+3. 安装为桌面应用
+
+### 局域网访问（手机测试）
+```bash
+# 查看你的电脑IP
+ipconfig  # 找 IPv4 地址，如 192.168.1.x
+
+# 启动时绑定局域网
+npm run dev -- -H 0.0.0.0
+# 手机访问: http://192.168.1.x:3000
+```
+
+---
+
+## 🎵 接入 Jamendo 真实音乐
+
+1. 访问 https://developers.jamendo.com/v3.0 注册
+2. 创建应用获取 Client ID
+3. 在 `.env.local` 中填入：
 
 ```
 JAMENDO_CLIENT_ID=你的ClientID
 ```
 
-配置后重启 `npm run dev`，搜索和推荐会自动调用 Jamendo 真实音乐库（50万+ 首免费音乐）。
-
-### SoundCloud / YouTube
-
-在 `.env.local` 中添加对应 Key：
-```
-SOUNDCLOUD_CLIENT_ID=
-YOUTUBE_API_KEY=
-```
+重启后搜索即接入 50万+ 真实音乐库。
 
 ---
 
-## 部署到 Vercel
+## 🎨 当前功能
 
-### 自动部署（推荐）
-
-```bash
-# 登录（只需一次）
-npx vercel login
-
-# 部署预览版
-npx vercel
-
-# 部署生产环境
-npx vercel --prod
-```
-
-### 部署后配置环境变量
-
-在 Vercel Dashboard → Settings → Environment Variables 中添加：
-- `JAMENDO_CLIENT_ID`
-
-### 自动 Git 部署
-
-在 Vercel 中关联 GitHub 仓库后，每次 push 自动部署。
-
----
-
-## 技术栈
-
-| 技术 | 用途 |
-|------|------|
-| Next.js 16 | 全栈框架 |
-| React 19 | UI |
-| Tailwind CSS v4 | 样式 |
-| Howler.js | 音频播放 |
-| Dexie.js | 浏览器数据库 |
-| Framer Motion | 动画 |
-| Jamendo API | 音乐数据 |
-
----
-
-## 项目结构
-
-```
-music-app/
-├── app/           # Next.js 页面和 API 路由
-├── components/    # React 组件
-├── hooks/         # 自定义 Hooks
-├── lib/           # 工具库、数据、类型定义
-└── public/        # 静态资源
-```
+- 🏠 **推荐流** — 上下滑动，点击播放/暂停，双击收藏
+- 🔍 **搜索** — 原唱/伴奏/纯音乐/翻唱筛选
+- 🎵 **播放器** — 黑胶唱片旋转动效，霓虹光晕
+- 📂 **我的** — 下载/收藏/历史管理
+- 📱 **PWA** — 可安装为手机/桌面 App
