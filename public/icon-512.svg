@@ -1,1 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ff6b6b"/><stop offset="100%" style="stop-color:#ffa502"/></linearGradient></defs><rect width="512" height="512" rx="32" fill="url(#g)"/><text x="96" y="110" text-anchor="middle" font-size="72" fill="white">🎵</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1628"/>
+      <stop offset="100%" style="stop-color:#000a14"/>
+    </linearGradient>
+    <radialGradient id="glowTop" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:#4a90d9;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:transparent"/>
+    </radialGradient>
+    <radialGradient id="glowBot" cx="50%" cy="70%" r="40%">
+      <stop offset="0%" style="stop-color:#f472b6;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:transparent"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="64" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="64" fill="url(#glowTop)"/>
+  <rect width="512" height="512" rx="64" fill="url(#glowBot)"/>
+
+  <!-- Stitch head -->
+  <ellipse cx="256" cy="280" rx="150" ry="165" fill="#4a90d9"/>
+  <ellipse cx="256" cy="280" rx="146" ry="161" fill="#4a90d9" stroke="#7ec8e3" stroke-width="4"/>
+
+  <!-- Left ear -->
+  <path d="M120 115 L45 35 L155 65 L170 135 Z" fill="#4a90d9" stroke="#7ec8e3" stroke-width="4"/>
+  <circle cx="65" cy="85" r="18" fill="#0a1628"/>
+  <!-- Right ear -->
+  <path d="M392 115 L467 35 L357 65 L342 135 Z" fill="#4a90d9" stroke="#7ec8e3" stroke-width="4"/>
+  <circle cx="447" cy="85" r="18" fill="#0a1628"/>
+
+  <!-- Inner ears pink -->
+  <path d="M138 135 L72 70 L132 100 L150 150 Z" fill="#f472b6"/>
+  <path d="M374 135 L440 70 L380 100 L362 150 Z" fill="#f472b6"/>
+
+  <!-- Eyes -->
+  <ellipse cx="200" cy="275" rx="55" ry="60" fill="#0a1628"/>
+  <ellipse cx="200" cy="278" rx="36" ry="42" fill="#1a2a3e"/>
+  <circle cx="200" cy="262" r="18" fill="white"/>
+  <circle cx="194" cy="256" r="6" fill="white"/>
+
+  <ellipse cx="312" cy="275" rx="55" ry="60" fill="#0a1628"/>
+  <ellipse cx="312" cy="278" rx="36" ry="42" fill="#1a2a3e"/>
+  <circle cx="312" cy="262" r="18" fill="white"/>
+  <circle cx="306" cy="256" r="6" fill="white"/>
+
+  <!-- Nose -->
+  <ellipse cx="256" cy="350" rx="40" ry="30" fill="#2d6fb4"/>
+
+  <!-- Mouth grin -->
+  <path d="M190 370 Q256 420 322 370" stroke="#1a3a5a" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+  <!-- Teeth -->
+  <rect x="220" y="370" width="20" height="14" rx="3" fill="white" opacity="0.9"/>
+  <rect x="272" y="370" width="20" height="14" rx="3" fill="white" opacity="0.9"/>
+
+  <!-- Floating notes -->
+  <text x="400" y="160" text-anchor="middle" font-size="60" fill="#f472b6" opacity="0.4">🎵</text>
+  <text x="100" y="200" text-anchor="middle" font-size="40" fill="#7ec8e3" opacity="0.3">🎵</text>
+
+  <!-- App name -->
+  <text x="256" y="478" text-anchor="middle" font-size="48" font-family="sans-serif" font-weight="800" fill="white" opacity="0.9">MusicFlow</text>
+</svg>

@@ -20,6 +20,8 @@ export interface Song {
   sources: Source[];
   tags: string[];
   popularity: number;
+  /** Display label for the audio source, e.g. "完整", "试听30s" */
+  sourceLabel?: string;
 }
 
 export interface DownloadItem {

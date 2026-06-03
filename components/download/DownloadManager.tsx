@@ -22,8 +22,8 @@ export default function DownloadManager() {
     return (
       <div className="py-16 text-center">
         <p className="text-5xl mb-3">🐾</p>
-        <p style={{ color: '#5a7a9a' }}>暂无下载的歌曲</p>
-        <p className="mt-1 text-xs" style={{ color: '#5a7a9a' }}>搜索歌曲并点击下载即可离线收听</p>
+        <p className="text-text-muted">暂无下载的歌曲</p>
+        <p className="mt-1 text-xs text-text-muted">搜索歌曲并点击下载即可离线收听</p>
       </div>
     );
   }
@@ -44,13 +44,13 @@ export default function DownloadManager() {
         <div key={item.songId} className="flex items-center gap-3 rounded-xl p-3 card-hover" style={{ background: 'rgba(255,255,255,0.04)' }}>
           <div
             className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-lg"
-            style={{ background: 'linear-gradient(135deg, #4a90d9, #7ec8e3)' }}
+            style={{ background: 'linear-gradient(135deg, #3298f0, #38c8e8)' }}
           >
             🐾
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-white">{item.songInfo.title}</p>
-            <p className="text-xs" style={{ color: '#5a7a9a' }}>{item.songInfo.artist} · {formatSize(item.blob)}</p>
+            <p className="text-xs text-text-muted">{item.songInfo.artist} · {formatSize(item.blob)}</p>
           </div>
           <button
             onClick={() => {
@@ -58,15 +58,13 @@ export default function DownloadManager() {
               const offlineSong = { ...item.songInfo, sources: [{ platform: 'other' as const, streamUrl: url, downloadUrl: url, quality: item.quality }] };
               play(offlineSong);
             }}
-            className="rounded-full p-2.5 text-lg transition-colors hover:bg-white/10"
-            style={{ color: '#4a90d9' }}
+            className="rounded-full p-2.5 text-lg transition-colors hover:bg-white/10 text-primary"
           >
             ▶️
           </button>
           <button
             onClick={() => handleRemove(item.songId)}
-            className="rounded-full p-2 text-sm transition-colors hover:bg-white/10"
-            style={{ color: '#5a7a9a' }}
+            className="rounded-full p-2 text-sm transition-colors hover:bg-white/10 text-text-muted"
           >
             🗑
           </button>

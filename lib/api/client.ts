@@ -33,9 +33,28 @@ export async function getSongDetail(id: string): Promise<Song> {
   return fetchJSON<Song>(`${BASE_URL}/song/${id}`);
 }
 
-export function getStreamUrl(id: string, platform?: string): string {
+/**
+ * Get the stream URL for a song.
+ * Pass the actual stream URL from the song's sources so the server can proxy it.
+ * Falls back to the ID-based route for seed data.
+ */
+export function getStreamUrl(song: Song | string, platform?: string): string {
+  if (typeof song === 'string') {
+    // Legacy: just ID — server will try to resolve
+    const params = platform ? `?platform=${platform}` : '';
+    return `${BASE_URL}/stream/${song}${params}`;
+  }
+
+  // Use actual source URL if available — pass via query param for proxy
+  const source = song.sources[0];
+  if (source?.streamUrl && (source.streamUrl.startsWith('http://') || source.streamUrl.startsWith('https://'))) {
+    const srcParam = encodeURIComponent(source.streamUrl);
+    const platformParam = platform ? `&platform=${platform}` : '';
+    return `${BASE_URL}/stream/${song.id}?src=${srcParam}${platformParam}`;
+  }
+
   const params = platform ? `?platform=${platform}` : '';
-  return `${BASE_URL}/stream/${id}${params}`;
+  return `${BASE_URL}/stream/${song.id}${params}`;
 }
 
 export function getDownloadUrl(id: string): string {

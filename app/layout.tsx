@@ -36,14 +36,14 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className="h-full">
       <head>
-        <link rel="apple-touch-icon" href="/icon-192.svg" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body className="min-h-full flex flex-col bg-background">
+      <body className="min-h-full flex flex-col ocean-gradient">
         <PwaRegister />
         <AudioProvider>
-          <main className="min-h-screen pb-32 safe-bottom">{children}</main>
-          <NavBar />
+          <main className="flex-1" style={{ paddingBottom: '9rem' }}>{children}</main>
           <MiniPlayer />
+          <NavBar />
         </AudioProvider>
       </body>
     </html>

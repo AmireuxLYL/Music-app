@@ -6,53 +6,142 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const srcParam = request.nextUrl.searchParams.get('src');
 
-  // If the ID looks like "itunes-XXX", proxy the iTunes preview URL
-  if (id.startsWith('itunes-')) {
-    const realId = id.replace('itunes-', '');
-    const previewUrl = `https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/${realId.slice(-3)}/${realId}/mzaf_${realId}@2x.m4a`;
-
+  // If src param provided, proxy that URL directly (iTunes preview, Jamendo, etc.)
+  if (srcParam) {
     try {
-      const range = request.headers.get('range');
-      const upstream = await fetch(previewUrl, {
-        headers: range ? { Range: range } : {},
-      });
-
-      if (upstream.ok) {
-        const headers = new Headers();
-        headers.set('Content-Type', 'audio/x-m4a');
-        headers.set('Accept-Ranges', 'bytes');
-        const cl = upstream.headers.get('content-length');
-        if (cl) headers.set('Content-Length', cl);
-        return new NextResponse(upstream.body, { status: upstream.status, headers });
-      }
+      const srcUrl = decodeURIComponent(srcParam);
+      return proxyAudio(request, srcUrl);
     } catch {
       // Fall through
     }
   }
 
-  // Check seed data for direct URLs
+  // Handle iTunes ID pattern
+  if (id.startsWith('itunes-')) {
+    // Try the standard iTunes preview URL pattern
+    const realId = id.replace('itunes-', '');
+    const patterns = [
+      `https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/${realId.slice(-3)}/${realId}/mzaf_${realId}@2x.m4a`,
+      `https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/${realId.slice(-3)}/${realId}/mzaf_${realId}@2x.m4a`,
+      `https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/${realId.slice(-3)}/${realId}/mzaf_${realId}.m4a`,
+    ];
+
+    for (const pattern of patterns) {
+      try {
+        const result = await proxyAudio(request, pattern);
+        if (result.status === 200) return result;
+      } catch {
+        continue;
+      }
+    }
+    return NextResponse.json({ error: 'iTunes stream not available' }, { status: 404 });
+  }
+
+  // Handle Internet Archive ID pattern: ia-IDENTIFIER
+  if (id.startsWith('ia-')) {
+    const iaId = id.replace('ia-', '');
+
+    // Try multiple common filename patterns
+    const filenamePatterns = [
+      `${iaId}.mp3`,
+      `${iaId}_vbr.mp3`,
+      `${iaId}_64kb.mp3`,
+    ];
+
+    for (const fn of filenamePatterns) {
+      const url = `https://archive.org/download/${iaId}/${fn}`;
+      try {
+        const result = await proxyAudio(request, url);
+        if (result.status === 200) {
+          // Check content type to ensure it's audio
+          const ct = result.headers.get('Content-Type');
+          if (ct && (ct.includes('audio') || ct.includes('mpeg') || ct.includes('octet-stream'))) {
+            return result;
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    // Last resort: try to resolve via archive.org metadata
+    try {
+      const metaRes = await fetch(`https://archive.org/metadata/${iaId}`);
+      const meta = await metaRes.json();
+      const files = meta?.files || [];
+      const mp3File = files.find(
+        (f: { name?: string; format?: string }) =>
+          f.name?.endsWith('.mp3') || f.format === 'VBR MP3'
+      );
+      if (mp3File?.name) {
+        return proxyAudio(request, `https://archive.org/download/${iaId}/${mp3File.name}`);
+      }
+    } catch {
+      // Give up
+    }
+
+    return NextResponse.json({ error: 'Archive audio not available' }, { status: 404 });
+  }
+
+  // Handle Jamendo ID pattern
+  if (id.startsWith('jamendo-')) {
+    return NextResponse.json(
+      { error: 'Jamendo stream requires src parameter. Please re-search with Jamendo key configured.' },
+      { status: 400 }
+    );
+  }
+
+  // Fallback: check seed data
   const seedSong = getSongById(id);
   const sourceUrl = seedSong?.sources[0]?.streamUrl;
   if (sourceUrl && (sourceUrl.startsWith('http://') || sourceUrl.startsWith('https://'))) {
     try {
-      const range = request.headers.get('range');
-      const upstream = await fetch(sourceUrl, {
-        headers: range ? { Range: range } : {},
-      });
-      const headers = new Headers();
-      headers.set('Content-Type', upstream.headers.get('content-type') || 'audio/mpeg');
-      headers.set('Accept-Ranges', 'bytes');
-      const cl = upstream.headers.get('content-length');
-      if (cl) headers.set('Content-Length', cl);
-      return new NextResponse(upstream.body, { status: upstream.status, headers });
+      return proxyAudio(request, sourceUrl);
     } catch {
       // Fall through
     }
   }
 
-  return NextResponse.json(
-    { error: 'Stream not available' },
-    { status: 404 }
-  );
+  return NextResponse.json({ error: 'Stream not available' }, { status: 404 });
+}
+
+/**
+ * Proxy an audio URL, forwarding range headers for seeking support.
+ */
+async function proxyAudio(request: NextRequest, targetUrl: string): Promise<NextResponse> {
+  const headers: Record<string, string> = {
+    'User-Agent': 'MusicFlow/1.0 (music player)',
+  };
+
+  const range = request.headers.get('range');
+  if (range) {
+    headers['Range'] = range;
+  }
+
+  const upstream = await fetch(targetUrl, { headers });
+
+  if (!upstream.ok && upstream.status !== 206) {
+    return NextResponse.json(
+      { error: `Upstream returned ${upstream.status}` },
+      { status: upstream.status }
+    );
+  }
+
+  const responseHeaders = new Headers();
+  const ct = upstream.headers.get('content-type');
+  responseHeaders.set('Content-Type', ct || 'audio/mpeg');
+  responseHeaders.set('Accept-Ranges', 'bytes');
+  responseHeaders.set('Cache-Control', 'public, max-age=3600');
+
+  const cl = upstream.headers.get('content-length');
+  if (cl) responseHeaders.set('Content-Length', cl);
+  const cr = upstream.headers.get('content-range');
+  if (cr) responseHeaders.set('Content-Range', cr);
+
+  return new NextResponse(upstream.body, {
+    status: upstream.status,
+    headers: responseHeaders,
+  });
 }

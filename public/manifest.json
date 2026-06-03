@@ -1,23 +1,23 @@
 {
-  "name": "MusicFlow",
+  "name": "MusicFlow - 发现好音乐",
   "short_name": "MusicFlow",
-  "description": "发现好音乐 — 像刷抖音一样刷歌",
+  "description": "网易云 + JioSaavn 海量音乐，上下滑动发现好歌",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f0f",
-  "theme_color": "#0f0f0f",
+  "background_color": "#0a1628",
+  "theme_color": "#4a90d9",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-192.svg",
+      "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.svg",
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

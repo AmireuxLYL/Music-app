@@ -54,6 +54,7 @@ export async function searchArchive(query: string, limit: number = 20): Promise<
         sources,
         tags: doc.subject || [],
         popularity: 60,
+        sourceLabel: '完整',
       };
     });
   } catch {

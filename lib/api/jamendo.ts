@@ -1,97 +1,51 @@
-import type { Song, Source } from '@/lib/types';
+// Jamendo music source — via local proxy on port 4001
+// Full songs; streams routed through Next.js API for phone compatibility
 
-const JAMENDO_BASE = 'https://api.jamendo.com/v3.0';
+import type { Song } from '@/lib/types';
 
-import { cookies } from 'next/headers';
+const PROXY = 'http://localhost:4001';
 
-async function getClientId(): Promise<string> {
-  // Check env var first
-  if (process.env.JAMENDO_CLIENT_ID) return process.env.JAMENDO_CLIENT_ID;
-  // Then check cookie (set by settings page)
-  try {
-    const cookieStore = await cookies();
-    return cookieStore.get('jamendo_client_id')?.value || '';
-  } catch {
-    return '';
-  }
-}
-
-function mapTrack(track: Record<string, unknown>): Song {
-  const sources: Source[] = [
-    {
-      platform: 'jamendo',
-      streamUrl: track.audio as string,
-      downloadUrl: track.audiodownload as string,
-      quality: '320',
-    },
-  ];
-
-  let type: Song['type'] = 'original';
-  const name = (track.name as string || '').toLowerCase();
-  const tags = (track.tags as string || '').toLowerCase();
-  if (name.includes('instrumental') || tags.includes('instrumental')) {
-    type = 'instrumental';
-  } else if (name.includes('piano') || name.includes('orchestral') || tags.includes('classical')) {
-    type = 'pure_music';
-  } else if (name.includes('cover')) {
-    type = 'cover';
-  }
-
+function mapToSong(item: any): Song {
   return {
-    id: `jamendo-${track.id}`,
-    title: track.name as string,
-    artist: track.artist_name as string,
-    coverUrl: (track.image as string) || '',
-    type,
-    duration: track.duration ? Math.round(track.duration as number) : 180,
-    sources,
-    tags: (track.tags as string)?.split(/\s*,\s*/).filter(Boolean) || [],
-    popularity: Math.round((track.popularity_total as number || 0) / 10),
-  };
+    id: item.id,
+    title: item.title,
+    artist: item.artist,
+    coverUrl: item.coverUrl || '',
+    type: 'original',
+    duration: item.duration,
+    sources: [{
+      platform: 'other' as const,
+      streamUrl: `/api/jamendo-stream?id=${item.id.replace('jamendo-', '')}`,
+      downloadUrl: `/api/jamendo-stream?id=${item.id.replace('jamendo-', '')}`,
+      quality: '320' as const,
+    }],
+    tags: [],
+    popularity: 70,
+    sourceLabel: '完整',
+  } as Song;
 }
 
-export async function searchJamendo(query: string, type?: string, limit: number = 20): Promise<Song[]> {
-  const clientId = await getClientId();
-  if (!clientId) return [];
-
-  const params = new URLSearchParams({
-    client_id: clientId,
-    format: 'json',
-    search: query,
-    limit: String(limit),
-    include: 'musicinfo',
-  });
-
-  if (type === 'instrumental') params.set('tags', 'instrumental');
-  if (type === 'pure_music') params.set('tags', 'classical,ambient');
-
+export async function searchJamendo(query: string, limit: number = 15): Promise<Song[]> {
   try {
-    const res = await fetch(`${JAMENDO_BASE}/tracks/?${params}`);
+    const res = await fetch(`${PROXY}/search?q=${encodeURIComponent(query)}&limit=${limit}`, {
+      signal: AbortSignal.timeout(10000),
+    });
     const data = await res.json();
     if (!data.results) return [];
-    return data.results.map(mapTrack);
+    return data.results.map(mapToSong);
   } catch {
     return [];
   }
 }
 
-export async function getJamendoTrending(limit: number = 20): Promise<Song[]> {
-  const clientId = await getClientId();
-  if (!clientId) return [];
-
-  const params = new URLSearchParams({
-    client_id: clientId,
-    format: 'json',
-    limit: String(limit),
-    order: 'popularity_total',
-    include: 'musicinfo',
-  });
-
+export async function getJamendoTrending(limit: number = 15): Promise<Song[]> {
   try {
-    const res = await fetch(`${JAMENDO_BASE}/tracks/?${params}`);
+    const res = await fetch(`${PROXY}/trending?limit=${limit}`, {
+      signal: AbortSignal.timeout(10000),
+    });
     const data = await res.json();
     if (!data.results) return [];
-    return data.results.map(mapTrack);
+    return data.results.map(mapToSong);
   } catch {
     return [];
   }

@@ -39,6 +39,7 @@ function mapTrack(track: ITunesTrack): Song {
     sources,
     tags: track.primaryGenreName ? [track.primaryGenreName] : [],
     popularity: 80,
+    sourceLabel: '试听 30s',
   };
 }
 
