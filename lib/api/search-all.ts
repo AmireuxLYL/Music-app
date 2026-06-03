@@ -2,6 +2,8 @@
 // iTunes (always works), JioSaavn (full songs when available)
 import type { Song } from '@/lib/types';
 import { searchJioSaavn } from './jiosaavn';
+import { searchQQ } from './qqmusic';
+import { searchNetease } from './netease';
 
 // ── iTunes Search (primary, always reliable) ──
 
@@ -112,15 +114,19 @@ export async function searchAll(query: string, limit: number = 30): Promise<Song
     }
   };
 
-  // Search iTunes with BOTH CN and US stores for max coverage
-  const [cn, us, jio] = await Promise.all([
+  // Search iTunes (reliable) + QQ + NetEase + JioSaavn all in parallel
+  const [cn, us, qq, ncm, jio] = await Promise.all([
     searchITunes(query, 'cn', 25).catch(() => [] as Song[]),
     searchITunes(query, 'us', 25).catch(() => [] as Song[]),
+    searchQQ(query, 15).catch(() => [] as Song[]),
+    searchNetease(query, 15).catch(() => [] as Song[]),
     searchJioSaavnSafe(query, 15),
   ]);
 
   addResults(cn);
   addResults(us);
+  addResults(qq);
+  addResults(ncm);
   addResults(jio);
 
   return Array.from(results.values()).slice(0, limit);
@@ -167,6 +173,8 @@ export async function getTrendingAll(filter: string = '', limit: number = 60): P
       Promise.all([
         searchITunes(q, 'cn', perQuery).catch(() => [] as Song[]),
         searchITunes(q, 'us', perQuery).catch(() => [] as Song[]),
+        searchQQ(q, Math.ceil(perQuery / 2)).catch(() => [] as Song[]),
+        searchNetease(q, Math.ceil(perQuery / 2)).catch(() => [] as Song[]),
         searchJioSaavnSafe(q, Math.ceil(perQuery / 2)).catch(() => [] as Song[]),
       ])
     )

@@ -1,15 +1,20 @@
-// QQ Music (QQ音乐) — direct API calls, no proxy needed
+// QQ Music (QQ音乐) — direct API calls using official endpoints
+// EdgeOne is Tencent Cloud → requests to QQ Music should pass internal network
 import type { Song } from '@/lib/types';
 
-const SEARCH_API = 'https://c.y.qq.com/soso/fcgi-bin/client_search_cp';
+const GUID = String(Date.now()).slice(0, 13);
+const SEARCH_URL = 'https://c.y.qq.com/soso/fcgi-bin/client_search_cp';
 const SONG_URL_API = 'https://u.y.qq.com/cgi-bin/musicu.fcg';
-const HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-  'Referer': 'https://y.qq.com/',
-};
 
-interface QQTrack {
-  id: number;
+function getHeaders() {
+  return {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Referer': 'https://y.qq.com',
+    'Accept': 'application/json',
+  };
+}
+
+interface QQSearchItem {
   songid: number;
   songmid: string;
   songname: string;
@@ -19,26 +24,26 @@ interface QQTrack {
   interval: number;
 }
 
-function mapTrack(track: QQTrack, streamUrl?: string): Song {
-  const title = track.songname || 'Unknown';
+function mapTrack(item: QQSearchItem, streamUrl?: string): Song {
+  const title = item.songname || 'Unknown';
   const lower = title.toLowerCase();
 
   let type: Song['type'] = 'original';
-  if (/伴奏|instrumental|karaoke/i.test(lower)) type = 'instrumental';
-  else if (/纯音乐|piano|orchestral|轻音乐/i.test(lower)) type = 'pure_music';
-  else if (/翻唱|cover/i.test(lower)) type = 'cover';
+  if (/伴奏|[（(]伴奏[）)]|instrumental|karaoke/i.test(lower)) type = 'instrumental';
+  else if (/纯音乐|piano|orchestral|轻音乐|[（(]纯音乐[）)]/i.test(lower)) type = 'pure_music';
+  else if (/翻唱|cover|[（(]翻唱[）)]/i.test(lower)) type = 'cover';
 
-  const coverUrl = track.albummid
-    ? `https://y.qq.com/music/photo_new/T002R300x300M000${track.albummid}.jpg`
+  const coverUrl = item.albummid
+    ? `https://y.qq.com/music/photo_new/T002R300x300M000${item.albummid}.jpg`
     : '';
 
   return {
-    id: `qq-${track.songmid || track.songid}`,
+    id: `qq-${item.songmid}`,
     title,
-    artist: (track.singer || []).map(s => s.name).join(' / ') || 'Unknown',
+    artist: (item.singer || []).map(s => s.name).join(' / ') || 'Unknown',
     coverUrl,
     type,
-    duration: track.interval || 0,
+    duration: item.interval || 0,
     sources: streamUrl ? [{
       platform: 'other',
       streamUrl,
@@ -46,11 +51,15 @@ function mapTrack(track: QQTrack, streamUrl?: string): Song {
       quality: '320',
     }] : [],
     tags: [],
-    popularity: 80,
-    sourceLabel: streamUrl ? '完整' : '试听',
+    popularity: 85,
+    sourceLabel: '完整',
   };
 }
 
+/**
+ * Search QQ Music for songs.
+ * Uses the official client search API that the QQ Music web player uses.
+ */
 export async function searchQQ(query: string, limit: number = 20): Promise<Song[]> {
   try {
     const params = new URLSearchParams({
@@ -66,78 +75,103 @@ export async function searchQQ(query: string, limit: number = 20): Promise<Song[
       lossless: '0',
       flag_qc: '0',
       p: '1',
-      n: String(Math.min(limit, 20)),
+      n: String(Math.min(limit, 30)),
       w: query,
       format: 'json',
+      platform: 'yqq.json',
     });
 
-    const res = await fetch(`${SEARCH_API}?${params}`, {
-      headers: HEADERS,
+    const url = `${SEARCH_URL}?${params}`;
+    const res = await fetch(url, {
+      headers: getHeaders(),
       signal: AbortSignal.timeout(6000),
     });
+
+    if (!res.ok) {
+      console.error(`QQ search HTTP ${res.status}`);
+      return [];
+    }
+
     const data = await res.json();
-    const tracks: QQTrack[] = data?.data?.song?.list || [];
-    if (!tracks.length) return [];
+    const list: QQSearchItem[] = data?.data?.song?.list || [];
 
-    // Get stream URLs for first 8 songs
-    const urlMap = await getQQStreamUrls(tracks.slice(0, 8));
+    if (!list.length) return [];
 
-    return tracks.map(t => mapTrack(t, urlMap.get(t.songmid)));
-  } catch {
+    // Get streaming URLs for the first 10 songs (batch)
+    const urlMap = await getSongUrls(list.slice(0, 10));
+
+    return list.map(item => mapTrack(item, urlMap.get(item.songmid)));
+  } catch (err) {
+    console.error('QQ search error:', err);
     return [];
   }
 }
 
-async function getQQStreamUrls(tracks: QQTrack[]): Promise<Map<string, string>> {
+/**
+ * Get streaming URLs for multiple songs in a single API call.
+ */
+async function getSongUrls(tracks: QQSearchItem[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
-  for (const track of tracks) {
-    try {
-      const reqData = {
-        req_0: {
-          module: 'vkey.GetVkeyServer',
-          method: 'CgiGetVkey',
-          param: {
-            guid: String(Math.floor(Math.random() * 1e10)),
-            songmid: [track.songmid],
-            songtype: [0],
-            uin: '0',
-            loginflag: 1,
-            platform: '20',
-          },
-        },
-      };
 
-      const res = await fetch(`${SONG_URL_API}?format=json&data=${encodeURIComponent(JSON.stringify(reqData))}`, {
-        headers: HEADERS,
-        signal: AbortSignal.timeout(4000),
-      });
-      const data = await res.json();
-      const midurlinfo = data?.req_0?.data?.midurlinfo || [];
-      const sip = data?.req_0?.data?.sip || [];
-      const server = sip.length > 0 ? sip[0] : '';
-      const purl = midurlinfo[0]?.purl || '';
-      if (server && purl && !purl.includes('C400') === false) {
-        map.set(track.songmid, `${server}${purl}`);
+  if (!tracks.length) return map;
+
+  try {
+    // Build unified request for multiple songs
+    const reqData: Record<string, any> = {
+      req_0: {
+        module: 'vkey.GetVkeyServer',
+        method: 'CgiGetVkey',
+        param: {
+          guid: GUID,
+          songmid: tracks.map(t => t.songmid),
+          songtype: tracks.map(() => 0),
+          uin: '0',
+          loginflag: 0,
+          platform: '20',
+        },
+      },
+    };
+
+    const encoded = JSON.stringify(reqData);
+    const url = `${SONG_URL_API}?format=json&data=${encodeURIComponent(encoded)}`;
+    const res = await fetch(url, {
+      headers: getHeaders(),
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!res.ok) return map;
+
+    const data = await res.json();
+    const midurlinfo: any[] = data?.req_0?.data?.midurlinfo || [];
+    const sip: string[] = data?.req_0?.data?.sip || [];
+    const server = sip.length > 0 ? sip[0] : '';
+
+    for (let i = 0; i < midurlinfo.length; i++) {
+      const purl = midurlinfo[i]?.purl || '';
+      const songmid = tracks[i]?.songmid;
+      if (server && purl && songmid && purl !== '') {
+        // Full URL = server base + purl filename
+        const streamUrl = server + purl;
+        map.set(songmid, streamUrl);
       }
-    } catch {}
+    }
+  } catch (err) {
+    console.error('QQ song URL error:', err);
   }
+
   return map;
 }
 
-const GENRE_QUERIES: Record<string, string[]> = {
-  '华语流行': ['周杰伦', '陈奕迅', '林俊杰', '薛之谦', '邓紫棋', '热门', '新歌'],
-  '欧美': ['Taylor Swift', 'Ed Sheeran', 'The Weeknd', 'Billie Eilish', '欧美流行'],
-  '韩语': ['BTS', 'Blackpink', 'IU', 'k-pop', '韩国'],
-  '日语': ['米津玄师', 'YOASOBI', 'ado', '日语', '日本流行'],
-  '摇滚': ['摇滚', 'Beyond', 'Imagine Dragons', 'Queen'],
-  '民谣': ['民谣', '赵雷', '宋冬野', '房东的猫'],
-  '说唱': ['说唱', 'rap', 'Eminem', '中国新说唱'],
-  '电音': ['电音', 'EDM', 'Alan Walker', 'Marshmello'],
-  '经典': ['经典老歌', '怀旧', '邓丽君', '张国荣', '刘德华'],
-  'R&B': ['R&B', 'rnb', '陶喆', '方大同'],
-  '爵士': ['爵士', 'jazz', '王家卫', '小野丽莎'],
-};
+/**
+ * Get trending songs by searching popular Chinese terms.
+ */
+const TRENDING_QUERIES = [
+  '周杰伦', '陈奕迅', '邓紫棋', '薛之谦', '林俊杰', '刘德华',
+  '张学友', '王菲', '五月天', '林宥嘉', '张惠妹', '蔡依林',
+  '华语新歌', '抖音热歌', '经典老歌',
+];
 
-export function getGenreQueries(genreKey: string): string[] {
-  return GENRE_QUERIES[genreKey] || [];
+export async function getQQTrending(limit: number = 20): Promise<Song[]> {
+  const query = TRENDING_QUERIES[Math.floor(Math.random() * TRENDING_QUERIES.length)];
+  return searchQQ(query, limit);
 }
