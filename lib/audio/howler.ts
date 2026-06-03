@@ -31,12 +31,19 @@ export function play(options: PlayOptions): void {
   const isRealUrl = url && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:'));
 
   if (isRealUrl) {
-    // Try real audio via Howler
     try {
+      // Determine format: force mp3 for Chinese CDN URLs that lack extension
+      const ext = url.includes('.m4a') ? 'm4a' :
+                  url.includes('.flac') ? 'flac' :
+                  url.includes('.mp3') ? 'mp3' :
+                  'mp3'; // default for generic CDN URLs
+
       const howl = new Howl({
         src: [url],
+        format: [ext],
         html5: true,
         volume: currentVolume,
+        preload: 'metadata',
         onend: () => {
           isUsingSynth = false;
           onEndCallback?.();
@@ -45,9 +52,12 @@ export function play(options: PlayOptions): void {
           isUsingSynth = false;
           onLoadCallback?.();
         },
-        onplay: options.onPlay,
-        onloaderror: () => {
-          // Fallback to synth on load error
+        onplayerror: (_id, err) => {
+          // Browser blocked autoplay or CORS issue — retry with user gesture
+          console.warn('Howler play error:', err);
+        },
+        onloaderror: (_id, err) => {
+          console.warn('Howler load error for:', url, err);
           useSynthFallback(options);
         },
       });
@@ -57,8 +67,8 @@ export function play(options: PlayOptions): void {
       isUsingSynth = false;
       currentSongId = options.songId;
       return;
-    } catch {
-      // Fallback to synth
+    } catch (err) {
+      console.warn('Howler creation error:', err);
     }
   }
 

@@ -37,10 +37,7 @@ export default function RootLayout({
     <html lang="zh-CN" className="h-full">
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
-        <link rel="preconnect" href="https://www.jiosaavn.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://aac.saavncdn.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://www.jiosaavn.com" />
-        <link rel="dns-prefetch" href="https://aac.saavncdn.com" />
+        <meta name="referrer" content="no-referrer" />
       </head>
       <body className="min-h-full flex flex-col ocean-gradient">
         <PwaRegister />
