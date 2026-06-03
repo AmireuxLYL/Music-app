@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Song } from '@/lib/types';
 import { useAudio } from '@/hooks/useAudio';
-import { getAllFavorites } from '@/lib/db/indexeddb';
 import MusicCard from './MusicCard';
 
 const FILTERS = [
