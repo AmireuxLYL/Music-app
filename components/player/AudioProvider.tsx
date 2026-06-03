@@ -70,11 +70,12 @@ export default function AudioProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const playSong = useCallback((song: Song, platform?: string) => {
+    // Always proxy audio through server to bypass CDN hotlink protection.
+    // Server adds proper Referer/UA headers that browser cannot.
     const directUrl = song.sources?.[0]?.streamUrl;
-    const isDirect = directUrl && (directUrl.startsWith('http://') || directUrl.startsWith('https://'));
-    const url = isDirect && !song.id.startsWith('itunes-')
-      ? directUrl
-      : getStreamUrl(song, platform);
+    const url = (directUrl && (directUrl.startsWith('http://') || directUrl.startsWith('https://')))
+      ? getStreamUrl(song, platform)  // proxy via /api/stream/[id]?src=...
+      : getStreamUrl(song, platform); // fallback
 
     stopProgress();
     audio.stop();

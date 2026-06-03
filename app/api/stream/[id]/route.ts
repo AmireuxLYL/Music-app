@@ -112,8 +112,16 @@ export async function GET(
  */
 async function proxyAudio(request: NextRequest, targetUrl: string): Promise<NextResponse> {
   const headers: Record<string, string> = {
-    'User-Agent': 'MusicFlow/1.0 (music player)',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': '*/*',
+    'Accept-Encoding': 'identity',
   };
+  // Set proper Referer based on the target domain
+  if (targetUrl.includes('163.com') || targetUrl.includes('126.net')) {
+    headers['Referer'] = 'https://music.163.com/';
+  } else if (targetUrl.includes('y.qq.com') || targetUrl.includes('qq.com')) {
+    headers['Referer'] = 'https://y.qq.com/';
+  }
 
   const range = request.headers.get('range');
   if (range) {
