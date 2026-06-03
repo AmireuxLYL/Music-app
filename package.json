@@ -9,16 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@distube/ytdl-core": "^4.16.12",
-    "better-sqlite3": "^12.10.0",
     "crypto-js": "^4.2.0",
     "dexie": "^4.4.3",
     "framer-motion": "^12.40.0",
     "howler": "^2.2.4",
     "jiosaavn-api-client": "^2.0.0",
-    "NeteaseCloudMusicApi": "^4.32.0",
     "next": "16.2.6",
-    "qq-music-api": "^1.1.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "sharp": "^0.34.5",
