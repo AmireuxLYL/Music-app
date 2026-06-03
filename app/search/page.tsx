@@ -30,7 +30,7 @@ export default function SearchPage() {
             搜索音乐
           </h1>
           <p className="mt-1 text-sm text-text-muted">
-            🐾 QQ音乐 + 网易云 + iTunes 全球曲库
+            🐾 网易云 + QQ音乐 + 酷狗 + 酷我 + iTunes
             <span className="ml-2 text-xs text-text-muted opacity-60">1亿+ 曲库</span>
           </p>
         </div>
