@@ -65,7 +65,7 @@ export default function SwipeFeed() {
 
   const loadReal = async () => {
     try {
-      const res = await fetch('/api/trending?offset=0', { signal: AbortSignal.timeout(10000) });
+      const res = await fetch('/api/trending?offset=0', { signal: AbortSignal.timeout(6000) });
       const data = await res.json();
       if (data.songs?.length > 0) {
         setSongs(data.songs);
@@ -77,7 +77,8 @@ export default function SwipeFeed() {
   };
 
   const loadInitial = async (filter: string) => {
-    setLoading(true);
+    // Only show loading if we have no songs at all
+    if (songs.length === 0) setLoading(true);
     setCurrentIndex(0);
     setNextOffset(0);
     setHasMore(true);
@@ -87,7 +88,7 @@ export default function SwipeFeed() {
         : '/api/trending?offset=0';
 
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 12000);
+      const timeout = setTimeout(() => controller.abort(), 8000);
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeout);
       const data = await res.json();
@@ -98,7 +99,7 @@ export default function SwipeFeed() {
       }
     } catch (err: any) {
       console.error('Load failed:', err.message);
-      setSongs([]);
+      // Keep existing songs, don't empty the list
     } finally {
       setLoading(false);
     }

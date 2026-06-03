@@ -18,8 +18,12 @@ export function useDownload() {
     setDownloading((prev) => new Set(prev).add(song.id));
 
     try {
-      const url = getDownloadUrl(song.id);
-      const response = await fetch(url);
+      // Direct download from source URL (bypass EdgeOne proxy 4MB limit)
+      const directUrl = song.sources?.[0]?.downloadUrl;
+      const url = (directUrl && (directUrl.startsWith('http://') || directUrl.startsWith('https://')))
+        ? directUrl
+        : getDownloadUrl(song.id);
+      const response = await fetch(url, { mode: 'cors' });
 
       if (!response.ok) throw new Error('Download failed');
 

@@ -91,7 +91,7 @@ export async function searchJioSaavn(query: string, limit: number = 10): Promise
 
     const res = await fetch(`${API_BASE}?${params}`, {
       headers: { 'User-Agent': 'Mozilla/5.0' },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(6000),
     });
 
     const data = await res.json();

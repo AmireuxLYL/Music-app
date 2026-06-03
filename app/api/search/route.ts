@@ -2,12 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { searchJioSaavn } from '@/lib/api/jiosaavn';
 import type { Song } from '@/lib/types';
 
+const cache = new Map<string, { data: Song[]; expires: number }>();
+const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get('q')?.toLowerCase() || '';
   const page = parseInt(request.nextUrl.searchParams.get('page') || '1', 10);
 
   if (!q) {
     return NextResponse.json({ results: [], total: 0, page: 1 });
+  }
+
+  const cacheKey = `search:${q}:${page}`;
+  const cached = cache.get(cacheKey);
+  if (cached && cached.expires > Date.now()) {
+    const pageSize = 10;
+    const start = (page - 1) * pageSize;
+    return NextResponse.json(
+      { results: cached.data.slice(start, start + pageSize), total: cached.data.length, page },
+      { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=30' } }
+    );
   }
 
   try {
@@ -28,6 +42,9 @@ export async function GET(request: NextRequest) {
       return true;
     });
 
+    // Cache the full result set
+    cache.set(cacheKey, { data: unique, expires: Date.now() + CACHE_TTL });
+
     const total = unique.length;
     const pageSize = 10;
     const start = (page - 1) * pageSize;
@@ -38,6 +55,15 @@ export async function GET(request: NextRequest) {
       { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=30' } }
     );
   } catch {
+    // Return stale cache if available
+    if (cached) {
+      const pageSize = 10;
+      const start = (page - 1) * pageSize;
+      return NextResponse.json(
+        { results: cached.data.slice(start, start + pageSize), total: cached.data.length, page },
+        { headers: { 'Cache-Control': 'public, s-maxage=60' } }
+      );
+    }
     return NextResponse.json({ results: [], total: 0, page: 1 });
   }
 }
