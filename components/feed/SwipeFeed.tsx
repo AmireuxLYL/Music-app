@@ -40,7 +40,6 @@ export default function SwipeFeed() {
   const [nextOffset, setNextOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [dataSource, setDataSource] = useState<'seed' | 'api'>('seed');
   const [winW, setWinW] = useState(375); // SSR-safe default
   const { playAll } = useAudio();
   const filterScrollRef = useRef<HTMLDivElement>(null);
@@ -70,7 +69,6 @@ export default function SwipeFeed() {
         setSongs(data.songs);
         setNextOffset(data.nextOffset || data.songs.length);
         setHasMore(data.hasMore !== false);
-        setDataSource('api');
       }
     } catch { /* keep seed data */ }
   };
